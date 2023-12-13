@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package test;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/qazwsxedckll/protoc-gen-go-grain/test";
+
+service Hello {
+  rpc SayHello (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
