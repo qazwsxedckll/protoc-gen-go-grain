@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-exec go run protoc-gen-go-grain
+exec go run github.com/qazwsxedckll/protoc-gen-go-grain

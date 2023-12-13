@@ -1,46 +1,47 @@
-var x{{ .Name }}Factory func() {{ .Name }}
+{{ $service := . }}
+var x{{ $service.Name }}Factory func() {{ $service.Name }}
 
-// {{ .Name }}Factory produces a {{ .Name }}
-func {{ .Name }}Factory(factory func() {{ .Name }}) {
-	x{{ .Name }}Factory = factory
+// {{ $service.Name }}Factory produces a {{ $service.Name }}
+func {{ $service.Name }}Factory(factory func() {{ $service.Name }}) {
+	x{{ $service.Name }}Factory = factory
 }
 
-// Get{{ .Name }}GrainClient instantiates a new {{ .Name }}GrainClient with given Identity
-func Get{{ .Name }}GrainClient(c *cluster.Cluster, id string) *{{ .Name }}GrainClient {
+// Get{{ $service.Name }}GrainClient instantiates a new {{ $service.Name }}GrainClient with given Identity
+func Get{{ $service.Name }}GrainClient(c *cluster.Cluster, id string) *{{ $service.Name }}GrainClient {
 	if c == nil {
 		panic(fmt.Errorf("nil cluster instance"))
 	}
 	if id == "" {
 		panic(fmt.Errorf("empty id"))
 	}
-	return &{{ .Name }}GrainClient{Identity: id, cluster: c}
+	return &{{ $service.Name }}GrainClient{Identity: id, cluster: c}
 }
 
-// Get{{ .Name }}Kind instantiates a new cluster.Kind for {{ .Name }}
-func Get{{ .Name }}Kind(opts ...actor.PropsOption) *cluster.Kind {
+// Get{{ $service.Name }}Kind instantiates a new cluster.Kind for {{ $service.Name }}
+func Get{{ $service.Name }}Kind(opts ...actor.PropsOption) *cluster.Kind {
 	props := actor.PropsFromProducer(func() actor.Actor {
-		return &{{ .Name }}Actor{
+		return &{{ $service.Name }}Actor{
 			Timeout: 60 * time.Second,
 		}
 	}, opts...)
-	kind := cluster.NewKind("{{ .Name }}", props)
+	kind := cluster.NewKind("{{ $service.Name }}", props)
 	return kind
 }
 
-// Get{{ .Name }}Kind instantiates a new cluster.Kind for {{ .Name }}
-func New{{ .Name }}Kind(factory func() {{ .Name }}, timeout time.Duration, opts ...actor.PropsOption) *cluster.Kind {
-	x{{ .Name }}Factory = factory
+// Get{{ $service.Name }}Kind instantiates a new cluster.Kind for {{ $service.Name }}
+func New{{ $service.Name }}Kind(factory func() {{ $service.Name }}, timeout time.Duration, opts ...actor.PropsOption) *cluster.Kind {
+	x{{ $service.Name }}Factory = factory
 	props := actor.PropsFromProducer(func() actor.Actor {
-		return &{{ .Name }}Actor{
+		return &{{ $service.Name }}Actor{
 			Timeout: timeout,
 		}
 	}, opts...)
-	kind := cluster.NewKind("{{ .Name }}", props)
+	kind := cluster.NewKind("{{ $service.Name }}", props)
 	return kind
 }
 
-// {{ .Name }} interfaces the services available to the {{ .Name }}
-type {{ .Name }} interface {
+// {{ $service.Name }} interfaces the services available to the {{ $service.Name }}
+type {{ $service.Name }} interface {
 	Init(ctx cluster.GrainContext)
 	Terminate(ctx cluster.GrainContext)
 	ReceiveDefault(ctx cluster.GrainContext)
@@ -49,20 +50,20 @@ type {{ .Name }} interface {
 	{{- end }}
 }
 
-// {{ .Name }}GrainClient holds the base data for the {{ .Name }}Grain
-type {{ .Name }}GrainClient struct {
+// {{ $service.Name }}GrainClient holds the base data for the {{ $service.Name }}Grain
+type {{ $service.Name }}GrainClient struct {
 	Identity string
 	cluster  *cluster.Cluster
 }
 {{ range $method := .Methods}}
 // {{ $method.Name }} requests the execution on to the cluster with CallOptions
-func (g *{{ .Name }}GrainClient) {{ $method.Name }}(r *{{ $method.Input }}, opts ...cluster.GrainCallOption) (*{{ $method.Output }}, error) {
+func (g *{{ $service.Name }}GrainClient) {{ $method.Name }}(r *{{ $method.Input }}, opts ...cluster.GrainCallOption) (*{{ $method.Output }}, error) {
 	bytes, err := proto.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
 	reqMsg := &cluster.GrainRequest{MethodIndex: {{ $method.Index }}, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "{{ .Name }}", reqMsg, opts...)
+	resp, err := g.cluster.Request(g.Identity, "{{ $service.Name }}", reqMsg, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -81,20 +82,20 @@ func (g *{{ .Name }}GrainClient) {{ $method.Name }}(r *{{ $method.Input }}, opts
 	}
 }
 {{ end }}
-// {{ .Name }}Actor represents the actor structure
-type {{ .Name }}Actor struct {
+// {{ $service.Name }}Actor represents the actor structure
+type {{ $service.Name }}Actor struct {
 	ctx     cluster.GrainContext
-	inner   {{ .Name }}
+	inner   {{ $service.Name }}
 	Timeout time.Duration
 }
 
 // Receive ensures the lifecycle of the actor for the received message
-func (a *{{ .Name }}Actor) Receive(ctx actor.Context) {
+func (a *{{ $service.Name }}Actor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started: //pass
 	case *cluster.ClusterInit:
 		a.ctx = cluster.NewGrainContext(ctx, msg.Identity, msg.Cluster)
-		a.inner = x{{ .Name }}Factory()
+		a.inner = x{{ $service.Name }}Factory()
 		a.inner.Init(a.ctx)
 
 		if a.Timeout > 0 {

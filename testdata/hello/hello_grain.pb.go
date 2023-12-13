@@ -2,12 +2,19 @@
 // versions:
 //  protoc-gen-grain v0.1.0
 //  protoc           v4.25.0
-// source: testdata/hello.proto
+// source: testdata/hello/hello.proto
 
-package test
+package hello
 
 import (
+	errors "errors"
+	fmt "fmt"
+	actor "github.com/asynkron/protoactor-go/actor"
+	cluster "github.com/asynkron/protoactor-go/cluster"
+	proto "google.golang.org/protobuf/proto"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	slog "log/slog"
+	time "time"
 )
 
 var xHelloFactory func() Hello
@@ -66,13 +73,13 @@ type HelloGrainClient struct {
 }
 
 // SayHello requests the execution on to the cluster with CallOptions
-func (g *SayHelloGrainClient) SayHello(r *emptypb.Empty, opts ...cluster.GrainCallOption) (*emptypb.Empty, error) {
+func (g *HelloGrainClient) SayHello(r *emptypb.Empty, opts ...cluster.GrainCallOption) (*emptypb.Empty, error) {
 	bytes, err := proto.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
 	reqMsg := &cluster.GrainRequest{MethodIndex: 0, MessageData: bytes}
-	resp, err := g.cluster.Request(g.Identity, "SayHello", reqMsg, opts...)
+	resp, err := g.cluster.Request(g.Identity, "Hello", reqMsg, opts...)
 	if err != nil {
 		return nil, err
 	}

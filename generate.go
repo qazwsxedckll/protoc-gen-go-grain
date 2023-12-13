@@ -7,7 +7,16 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
-const deprecationComment = "// Deprecated: Do not use."
+const (
+	deprecationComment = "// Deprecated: Do not use."
+	timePackage        = protogen.GoImportPath("time")
+	errorsPackage      = protogen.GoImportPath("errors")
+	fmtPackage         = protogen.GoImportPath("fmt")
+	slogPackage        = protogen.GoImportPath("log/slog")
+	protoPackage       = protogen.GoImportPath("google.golang.org/protobuf/proto")
+	actorPackage       = protogen.GoImportPath("github.com/asynkron/protoactor-go/actor")
+	clusterPackage     = protogen.GoImportPath("github.com/asynkron/protoactor-go/cluster")
+)
 
 func generateFile(gen *protogen.Plugin, file *protogen.File) {
 	filename := file.GeneratedFilenamePrefix + "_grain.pb.go"
@@ -44,6 +53,14 @@ func generateContent(gen *protogen.Plugin, g *protogen.GeneratedFile, file *prot
 	if len(file.Services) == 0 {
 		return
 	}
+
+	g.QualifiedGoIdent(actorPackage.Ident(""))
+	g.QualifiedGoIdent(clusterPackage.Ident(""))
+	g.QualifiedGoIdent(protoPackage.Ident(""))
+	g.QualifiedGoIdent(errorsPackage.Ident(""))
+	g.QualifiedGoIdent(fmtPackage.Ident(""))
+	g.QualifiedGoIdent(timePackage.Ident(""))
+	g.QualifiedGoIdent(slogPackage.Ident(""))
 
 	for _, service := range file.Services {
 		generateService(service, file, g)
